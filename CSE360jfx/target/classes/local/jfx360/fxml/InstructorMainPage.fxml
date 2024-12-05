@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="local.jfx360.controllers.InstructorMainPage">
+    <top>
+        <VBox>
+            <!-- User Info Bar -->
+            <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #f0f0f0; -fx-padding: 10px;">
+                <Label text="Welcome, " />
+                <Label fx:id="displaynameLabel" style="-fx-font-weight: bold;" text="(display name)" />
+                <Label text="Role: " />
+                <Label fx:id="displayroleLabel" style="-fx-font-weight: bold;" text="(display role)" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="logoutButton" onAction="#handleLogoutButton" style="-fx-background-color: #dc3545; -fx-text-fill: white;" text="Logout" />
+            </HBox>
+
+            <!-- Main Content -->
+            <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
+                <!-- Help Articles Tab -->
+                <Tab text="Help Articles">
+                    <VBox spacing="20" style="-fx-padding: 20;">
+                        <!-- Search and Filter Controls -->
+                        <VBox spacing="10">
+                            <!-- Action Buttons Row -->
+                            <HBox spacing="10">
+                                <Button fx:id="createHelpButton" style="-fx-background-color: #198754; -fx-text-fill: white;" text="Create Help Article" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Button fx:id="backupButton" style="-fx-background-color: #0d6efd; -fx-text-fill: white;" text="Backup Articles" />
+                                <Button fx:id="restoreButton" style="-fx-background-color: #0d6efd; -fx-text-fill: white;" text="Restore Articles" />
+                            </HBox>
+
+                            <!-- Search and Filter Row -->
+                            <HBox spacing="10">
+                                <TextField fx:id="searchTextField" promptText="Search by title, author, or abstract..." HBox.hgrow="ALWAYS" />
+                                <ComboBox fx:id="contentLevelComboBox" promptText="Content Level" />
+                                <ComboBox fx:id="groupFilterComboBox" promptText="Filter by Group" />
+                                <Button fx:id="searchButton" style="-fx-background-color: #0d6efd; -fx-text-fill: white;" text="Search" />
+                            </HBox>
+
+                            <!-- Search Stats -->
+                            <HBox spacing="10" style="-fx-padding: 5; -fx-background-color: #f8f9fa;">
+                                <Label text="Active Group: " />
+                                <Label fx:id="activeGroupLabel" style="-fx-font-weight: bold;" text="All" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label text="Results by level: " />
+                                <Label fx:id="levelStatsLabel" text="Beginner: 0, Intermediate: 0, Advanced: 0, Expert: 0" />
+                            </HBox>
+                        </VBox>
+
+                        <!-- Help Articles Table -->
+                        <TableView fx:id="helpArticlesTableView" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="sequenceColumn" prefWidth="50.0" text="#" />
+                                <TableColumn fx:id="articleIdColumn" prefWidth="100.0" text="ID" />
+                                <TableColumn fx:id="articleTitleColumn" prefWidth="200.0" text="Title" />
+                                <TableColumn fx:id="articleAuthorColumn" prefWidth="150.0" text="Author" />
+                                <TableColumn fx:id="articleLevelColumn" prefWidth="100.0" text="Level" />
+                                <TableColumn fx:id="articleGroupsColumn" prefWidth="150.0" text="Groups" />
+                                <TableColumn fx:id="encryptedColumn" prefWidth="80.0" text="Encrypted" />
+                                <TableColumn fx:id="articleDescriptionColumn" prefWidth="329.0" text="Description" />
+                            </columns>
+                        </TableView>
+
+                        <!-- Article Preview -->
+                        <TitledPane expanded="false" text="Article Preview">
+                            <VBox spacing="10">
+                                <TextArea fx:id="articlePreviewArea" editable="false" prefHeight="200" style="-fx-font-family: serif;" wrapText="true" />
+                            </VBox>
+                        </TitledPane>
+
+                        <!-- Action Buttons -->
+                        <HBox alignment="CENTER" spacing="10">
+                            <Button fx:id="editButton" style="-fx-background-color: #ffc107;" text="Edit Selected Article" />
+                            <Button fx:id="deleteButton" style="-fx-background-color: #dc3545; -fx-text-fill: white;" text="Delete Selected Article" />
+                            <Button fx:id="viewButton" style="-fx-background-color: #0d6efd; -fx-text-fill: white;" text="View Full Article" />
+                            <Button fx:id="manageAccessButton" style="-fx-background-color: #198754; -fx-text-fill: white;" text="Manage Access Rights" />
+                        </HBox>
+                    </VBox>
+                </Tab>
+
+                <!-- Group Management Tab -->
+                <Tab text="Group Management">
+                    <VBox spacing="20" style="-fx-padding: 20;">
+                        <!-- Group Creation Controls -->
+                        <GridPane hgap="10" vgap="10">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="NEVER" minWidth="100" />
+                                <ColumnConstraints hgrow="ALWAYS" minWidth="100" />
+                                <ColumnConstraints hgrow="NEVER" minWidth="100" />
+                            </columnConstraints>
+
+                            <HBox spacing="10" GridPane.columnSpan="3">
+                                <ComboBox fx:id="groupTypeComboBox" promptText="Group Type" />
+                                <ComboBox fx:id="groupNameComboBox" promptText="Select Group" HBox.hgrow="ALWAYS" />
+                                <TextField fx:id="searchGroup" promptText="Search groups..." HBox.hgrow="ALWAYS" />
+                                <Button onAction="#searchGroups" style="-fx-background-color: #0d6efd; -fx-text-fill: white;" text="Search" />
+                                <Button fx:id="createGroupButton" onAction="#createNewGroupTab" style="-fx-background-color: #198754; -fx-text-fill: white;" text="Create / Edit Group" />
+                                <Button fx:id="deleteGroupButton" onAction="#deleteSelectedGroup" style="-fx-background-color: #dc3545; -fx-text-fill: white;" text="Delete Group" />
+                            </HBox>
+                     <rowConstraints>
+                        <RowConstraints />
+                     </rowConstraints>
+                        </GridPane>
+
+                        <!-- Groups Table -->
+                        <TableView fx:id="groupsTableView" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="groupNameColumn" prefWidth="200" text="Group Name" />
+                                <TableColumn fx:id="groupTypeColumn" prefWidth="150" text="Type" />
+                                <TableColumn fx:id="articleCountColumn" prefWidth="150" text="Articles" />
+                                <TableColumn fx:id="membersColumn" prefWidth="150" text="Members" />
+                                <TableColumn fx:id="adminsColumn" prefWidth="150" text="Admins" />
+                                <TableColumn fx:id="isEncryptedColumn" prefWidth="100" text="Encrypted" />
+                                <TableColumn fx:id="descriptionColumn" prefWidth="259" text="Description" />
+                            </columns>
+                        </TableView>
+
+                        <!-- Group Management Buttons -->
+                        <HBox alignment="CENTER" spacing="10">
+                            <Button fx:id="manageStudentsButton" style="-fx-background-color: #0d6efd; -fx-text-fill: white;" text="Manage Students" />
+                            <Button fx:id="manageInstructorsButton" style="-fx-background-color: #0d6efd; -fx-text-fill: white;" text="Manage Instructors" />
+                            <Button fx:id="backupGroupButton" style="-fx-background-color: #198754; -fx-text-fill: white;" text="Backup Group" />
+                            <Button fx:id="restoreGroupButton" style="-fx-background-color: #198754; -fx-text-fill: white;" text="Restore Group" />
+                        </HBox>
+                    </VBox>
+                </Tab>
+                <Tab fx:id="adminRightsTab" text="Admin Rights" disable="true">
+                    <VBox spacing="20" style="-fx-padding: 20;">
+                        <HBox spacing="10">
+                            <TextField fx:id="userIdField" promptText="username" HBox.hgrow="ALWAYS" />
+
+                            <Button fx:id="addAdminRightsButton" onAction="#handleAddAdminRights"
+                                    style="-fx-background-color: #198754; -fx-text-fill: white;"
+                                    text="Add Admin Rights" />
+
+                            <Button fx:id="removeAdminRightsButton" onAction="#handleRemoveAdminRights"
+                                    style="-fx-background-color: #dc3545; -fx-text-fill: white;"
+                                    text="Remove Admin Rights" />
+                        </HBox>
+
+                        <TableView fx:id="adminRightsTableView" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="userIdColumn" prefWidth="200.0" text="User ID" />
+                                <TableColumn fx:id="username" prefWidth="200.0" text="User name" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+            </TabPane>
+
+        </VBox>
+    </top>
+</BorderPane>
