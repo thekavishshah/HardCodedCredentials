@@ -1,0 +1,228 @@
+-- Drop the database if it already exists to start fresh
+DROP DATABASE IF EXISTS projectdb;
+
+-- Create a new database named projectdb
+CREATE DATABASE projectdb;
+
+-- Use the newly created database
+USE projectdb;
+
+-- ----------------------------
+-- Table: roles
+-- Description: Stores the different user roles
+-- ----------------------------
+CREATE TABLE roles (
+                       id INT AUTO_INCREMENT PRIMARY KEY,
+                       name VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Insert the required roles
+INSERT INTO roles (name) VALUES ('Admin'), ('Student'), ('Instructor');
+
+-- ----------------------------
+-- Table: users
+-- Description: Stores user account information
+-- ----------------------------
+CREATE TABLE users (
+                       id INT AUTO_INCREMENT PRIMARY KEY,
+                       email_address VARCHAR(255) NOT NULL UNIQUE,
+                       username VARCHAR(50) NOT NULL UNIQUE,
+                       password VARCHAR(255) NOT NULL, -- Storing password as plain text (though not recommended for security)
+                       is_one_time_password BOOLEAN NOT NULL DEFAULT FALSE,
+                       one_time_password_expiration DATETIME DEFAULT NULL,
+                       first_name VARCHAR(50) NOT NULL,
+                       middle_name VARCHAR(50),
+                       last_name VARCHAR(50) NOT NULL,
+                       preferred_first_name VARCHAR(50)
+    -- Removed created_at and updated_at columns
+);
+
+-- ----------------------------
+-- Table: user_roles
+-- Description: Associates users with their roles (many-to-many relationship)
+-- ----------------------------
+CREATE TABLE user_roles (
+                            user_id INT NOT NULL,
+                            role_id INT NOT NULL,
+                            PRIMARY KEY (user_id, role_id),
+                            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                            FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+);
+
+-- Create a view to display user_id, username, role_id, and role_name
+CREATE VIEW user_roles_view AS
+SELECT ur.user_id, u.username, ur.role_id, r.name AS role_name
+FROM user_roles ur
+         JOIN users u ON ur.user_id = u.id
+         JOIN roles r ON ur.role_id = r.id;
+
+-- ----------------------------
+-- Table: topics
+-- Description: Stores system-recognized topics
+-- ----------------------------
+CREATE TABLE topics (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        name VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- You can insert predefined topics here if needed
+-- Example:
+-- INSERT INTO topics (name) VALUES ('Java'), ('Eclipse'), ('JavaFX'), ('GitHub');
+
+-- ----------------------------
+-- Table: user_topics
+-- Description: Associates users with topics and their proficiency levels
+-- ----------------------------
+CREATE TABLE user_topics (
+                             user_id INT NOT NULL,
+                             topic_id INT NOT NULL,
+                             level ENUM('beginner', 'intermediate', 'advanced', 'expert') NOT NULL DEFAULT 'intermediate',
+                             PRIMARY KEY (user_id, topic_id),
+                             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                             FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
+);
+
+CREATE TABLE invitation_codes (
+                                  id INT AUTO_INCREMENT PRIMARY KEY,
+                                  code VARCHAR(255) NOT NULL UNIQUE,
+                                  role_id INT NOT NULL,
+                                  expiration DATETIME NOT NULL,
+                                  is_used BOOLEAN NOT NULL DEFAULT FALSE,
+                                  FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+);
+
+
+-- Table: help_article_groups
+-- Description: Stores predefined help article groups
+-- ----------------------------
+CREATE TABLE help_article_groups (
+                                     id INT AUTO_INCREMENT PRIMARY KEY,
+                                     name VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- Insert default groups
+INSERT INTO help_article_groups (name) VALUES
+                                           ('Eclipse'),
+                                           ('IntelliJ'),
+                                           ('H2'),
+                                           ('SQL Fiddle');
+
+-- ----------------------------
+-- Table: help_articles
+-- Description: Stores help articles with content and metadata
+-- ----------------------------
+CREATE TABLE help_articles (
+                               id BIGINT PRIMARY KEY,
+                               title VARCHAR(255) NOT NULL,
+                               description TEXT NOT NULL,
+                               level ENUM('beginner', 'intermediate', 'advanced', 'expert') NOT NULL,
+                               keywords TEXT NOT NULL,
+                               body LONGTEXT NOT NULL,
+                               reference_links TEXT,
+                               is_restricted BOOLEAN DEFAULT FALSE,
+                               public_title VARCHAR(255),
+                               public_desc TEXT,
+                               created_by INT,  -- Changed to allow NULL temporarily
+                               last_modified_by INT,  -- Changed to allow NULL temporarily
+                               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                               updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                               FOREIGN KEY (created_by) REFERENCES users(id) ON UPDATE CASCADE ON DELETE SET NULL,
+                               FOREIGN KEY (last_modified_by) REFERENCES users(id) ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+-- ----------------------------
+-- Table: help_article_group_mapping
+-- Description: Maps articles to groups (many-to-many relationship)
+-- ----------------------------
+CREATE TABLE help_article_group_mapping (
+                                            article_id BIGINT NOT NULL,
+                                            group_id INT NOT NULL,
+                                            PRIMARY KEY (article_id, group_id),
+                                            FOREIGN KEY (article_id) REFERENCES help_articles(id) ON DELETE CASCADE,
+                                            FOREIGN KEY (group_id) REFERENCES help_article_groups(id) ON DELETE CASCADE
+);
+
+-- Add indexes for better performance
+CREATE INDEX idx_help_articles_level ON help_articles(level);
+CREATE INDEX idx_help_articles_created_by ON help_articles(created_by);
+CREATE INDEX idx_help_articles_restricted ON help_articles(is_restricted);
+
+-- Add fulltext index for search capabilities
+CREATE FULLTEXT INDEX idx_help_articles_search ON help_articles(title, description, keywords, body);
+
+-- Create view for easier querying
+CREATE OR REPLACE VIEW help_articles_with_groups AS
+SELECT
+    ha.*,
+    GROUP_CONCAT(DISTINCT hag.name) as group_names
+FROM help_articles ha
+         LEFT JOIN help_article_group_mapping hagm ON ha.id = hagm.article_id
+         LEFT JOIN help_article_groups hag ON hagm.group_id = hag.id
+GROUP BY ha.id;
+
+-- ----------------------------
+-- Table: help_system_messages
+-- Description: Stores system messages sent by users
+-- ----------------------------
+
+-- Drop the table if it exists to ensure clean creation
+DROP TABLE IF EXISTS help_system_messages;
+
+-- Create the help_system_messages table
+CREATE TABLE help_system_messages (
+                                      id INT AUTO_INCREMENT PRIMARY KEY,
+                                      user_id INT NOT NULL,
+                                      message_type VARCHAR(10) CHECK (message_type IN ('general', 'specific')) NOT NULL DEFAULT 'general',
+                                      content TEXT NOT NULL,
+                                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Create indexes after table creation
+CREATE INDEX idx_help_system_messages_user_id ON help_system_messages(user_id);
+CREATE INDEX idx_help_system_messages_type ON help_system_messages(message_type);
+
+-- Database enhancement: Add is_special_access column
+ALTER TABLE help_article_groups
+    ADD COLUMN is_special_access BOOLEAN DEFAULT FALSE;
+
+-- Create the many-to-many relationship table
+CREATE TABLE help_article_group_roles (
+                                          group_id INT NOT NULL,
+                                          user_id INT NOT NULL,
+                                          PRIMARY KEY (group_id, user_id),
+                                          FOREIGN KEY (group_id) REFERENCES help_article_groups(id) ON DELETE CASCADE,
+                                          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE student_group_mapping (
+                                    user_id INT NOT NULL,
+                                    group_id INT NOT NULL,
+                                    PRIMARY KEY (user_id, group_id),
+                                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                                    FOREIGN KEY (group_id) REFERENCES help_article_groups(id) ON DELETE CASCADE
+);
+
+CREATE TABLE AdminRights (
+                             userid INT PRIMARY KEY,         -- Unique identifier for the user
+                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Timestamp for when the admin rights were granted
+                             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- Last update timestamp
+);
+
+-- Use the following queries to view all tables in the database -----
+-- USE projectdb;
+
+-- SELECT * FROM roles;
+-- SELECT * FROM users;
+-- SELECT * FROM user_roles_view;
+-- -- SELECT * FROM user_roles;
+-- -- SELECT * FROM topics;
+-- -- SELECT * FROM user_topics;
+-- SELECT * FROM help_articles;
+-- -- SELECT * FROM invitation_codes;
+-- -- SELECT * FROM help_article_related;
+-- -- SELECT * FROM help_article_groups;
+-- -- SELECT * FROM help_article_group_map;
+-- -- SELECT * FROM help_article_backups
