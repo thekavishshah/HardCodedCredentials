@@ -30,4 +30,4 @@ Before running this application, please ensure you have the following prerequisi
 
 Note: If you encounter any database connection issues, please verify that your MySQL server is running and that the credentials in the DatabaseUtil class match your MySQL setup.
 
-For any questions or issues, please contact Toan Pham at kshah77@asu.edu
+For any questions or issues, please contact Kavish Shah at kshah77@asu.edu
